@@ -148,7 +148,8 @@ export const BoardCanvas = ({ project, onUpdateProject }: BoardCanvasProps) => {
   return (
     <>
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="flex gap-5 p-6 items-start h-full">
+        {/* board-columns-wrapper — responsive padding/gap via globals.css */}
+        <div className="board-columns-wrapper flex gap-5 p-6 items-start h-full">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}

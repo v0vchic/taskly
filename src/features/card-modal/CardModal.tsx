@@ -49,33 +49,43 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
   }
 
   return (
+  /* card-modal-container: on mobile becomes bottom-sheet via globals.css */
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="card-modal-container fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget)
           onClose()
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      {/* card-modal-box: on mobile becomes full-width bottom sheet */}
+      <div className="card-modal-box bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
+          {/* Bottom-sheet drag handle — visible only on mobile */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-slate-200 mobile:block hidden" />
           <h2 className="text-base font-bold text-slate-800">Edit Card</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-5 space-y-4 max-h-[70dvh] overflow-y-auto">
           {/* Title */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block">Title</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block">
+              Title
+            </label>
             <input
               autoFocus
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow"
+              className="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5
+                outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow"
               placeholder="Card title..."
             />
           </div>
@@ -84,14 +94,14 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <AlignLeft className="w-3.5 h-3.5" />
-              {' '}
               Description
             </label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
-              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 resize-none transition-shadow placeholder-slate-400"
+              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5
+                outline-none focus:ring-2 focus:ring-indigo-300 resize-none transition-shadow placeholder-slate-400"
               placeholder="Add a description..."
             />
           </div>
@@ -100,14 +110,14 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
-              {' '}
               Due Date
             </label>
             <input
               type="date"
               value={dueDate}
               onChange={e => setDueDate(e.target.value)}
-              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow"
+              className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5
+                outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow"
             />
           </div>
 
@@ -115,7 +125,6 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Tag className="w-3.5 h-3.5" />
-              {' '}
               Labels
             </label>
             <div className="flex flex-wrap gap-1.5 mb-2">
@@ -126,7 +135,10 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
                   style={{ backgroundColor: label.color }}
                 >
                   {label.text}
-                  <button onClick={() => setLabels(prev => prev.filter(l => l.id !== label.id))} className="hover:opacity-70">
+                  <button
+                    onClick={() => setLabels(prev => prev.filter(l => l.id !== label.id))}
+                    className="hover:opacity-70"
+                  >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
@@ -145,7 +157,8 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
                           addLabel()
                       }}
                       placeholder="Label text..."
-                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+                      className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2
+                        outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
                     />
                     <div className="flex gap-2 flex-wrap">
                       {LABEL_COLORS.map(color => (
@@ -162,17 +175,26 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={addLabel} className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors">
+                      <button
+                        onClick={addLabel}
+                        className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors"
+                      >
                         Add
                       </button>
-                      <button onClick={() => setShowLabelInput(false)} className="px-3 text-xs text-slate-500 hover:bg-slate-200 rounded-lg transition-colors">
+                      <button
+                        onClick={() => setShowLabelInput(false)}
+                        className="px-3 text-xs text-slate-500 hover:bg-slate-200 rounded-lg transition-colors"
+                      >
                         Cancel
                       </button>
                     </div>
                   </div>
                 )
               : (
-                  <button onClick={() => setShowLabelInput(true)} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors">
+                  <button
+                    onClick={() => setShowLabelInput(true)}
+                    className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                  >
                     + Add label
                   </button>
                 )}
@@ -192,7 +214,10 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
             Delete
           </button>
           <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-xl transition-colors font-medium">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-xl transition-colors font-medium"
+            >
               Cancel
             </button>
             <button

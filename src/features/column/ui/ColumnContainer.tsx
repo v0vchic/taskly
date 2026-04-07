@@ -26,9 +26,10 @@ export const ColumnContainer = ({
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
 
   return (
-    <div className="flex-shrink-0 w-72 flex flex-col">
+  /* board-column — width overridden responsively via globals.css */
+    <div className="board-column flex-shrink-0 w-72 flex flex-col">
       <div
-        className={`flex flex-col rounded-2xl transition-all duration-200 h-fit max-h-[calc(100vh-140px)]
+        className={`flex flex-col rounded-2xl transition-all duration-200 h-fit max-h-[calc(100dvh-140px)]
           ${isOver ? 'ring-2 ring-indigo-400 ring-offset-2' : ''}`}
         style={{ background: 'rgba(241,245,249,0.85)' }}
       >

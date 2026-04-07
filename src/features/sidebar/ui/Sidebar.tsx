@@ -27,8 +27,11 @@ export const Sidebar = ({
 }: SidebarProps) => {
   return (
     <aside
-      className="relative flex flex-col h-screen flex-shrink-0 transition-[width] duration-300 overflow-hidden select-none"
+      className={`sidebar-mobile relative flex flex-col h-screen flex-shrink-0 select-none
+        transition-[width,transform] duration-300 overflow-hidden
+        ${collapsed ? 'collapsed' : 'open'}`}
       style={{
+        /* Desktop: shrink width. Mobile: handled via CSS classes */
         width: collapsed ? '0px' : '220px',
         background: 'rgba(15,23,42,0.55)',
         backdropFilter: 'blur(16px)',
