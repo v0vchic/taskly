@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Card } from "@/shared/types";
-import { AlignLeft, Calendar, Pencil } from "lucide-react";
+import type { Card } from '@/shared/types'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { AlignLeft, Calendar, Pencil } from 'lucide-react'
 
 interface CardItemProps {
-  card: Card;
-  onEdit: (card: Card) => void;
+  card: Card
+  onEdit: (card: Card) => void
 }
 
 export const CardItem = ({ card, onEdit }: CardItemProps) => {
@@ -18,7 +18,7 @@ export const CardItem = ({ card, onEdit }: CardItemProps) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: card.id });
+  } = useSortable({ id: card.id })
 
   return (
     <div
@@ -26,13 +26,13 @@ export const CardItem = ({ card, onEdit }: CardItemProps) => {
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`group relative bg-white rounded-xl border border-slate-200 p-3.5 shadow-sm
         cursor-grab active:cursor-grabbing transition-all duration-150
-        ${isDragging ? "opacity-40 shadow-xl scale-105 rotate-1" : "hover:border-slate-300 hover:shadow-md"}`}
+        ${isDragging ? 'opacity-40 shadow-xl scale-105 rotate-1' : 'hover:border-slate-300 hover:shadow-md'}`}
       {...attributes}
       {...listeners}
     >
       {card.labels && card.labels.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2.5">
-          {card.labels.map((label) => (
+          {card.labels.map(label => (
             <span
               key={label.id}
               className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide text-white"
@@ -63,13 +63,13 @@ export const CardItem = ({ card, onEdit }: CardItemProps) => {
       )}
 
       <button
-        onClick={(e) => { e.stopPropagation(); onEdit(card); }}
-        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onEdit(card) }}
+        onPointerDown={e => e.stopPropagation()}
         className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100
           p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-all"
       >
         <Pencil className="w-3 h-3" />
       </button>
     </div>
-  );
+  )
 }

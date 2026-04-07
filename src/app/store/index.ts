@@ -1,1 +1,1 @@
-export { useAppState } from "./useAppState";
+export { useAppState } from './useAppState'

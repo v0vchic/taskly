@@ -1,3 +1,3 @@
-export { BoardHeader } from './BoardHeader';
-export { BoardCanvas } from './BoardCanvas';
-export { AddColumnButton } from './AddColumnButton';
+export { AddColumnButton } from './AddColumnButton'
+export { BoardCanvas } from './BoardCanvas'
+export { BoardHeader } from './BoardHeader'

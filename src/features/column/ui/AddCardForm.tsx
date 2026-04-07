@@ -1,33 +1,34 @@
-"use client";
+'use client'
 
-import { useState, useRef, useEffect } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface AddCardFormProps {
-  onAdd: (title: string) => void;
+  onAdd: (title: string) => void
 }
 
 export const AddCardForm = ({ onAdd }: AddCardFormProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [value, setValue] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [value, setValue] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (isOpen) textareaRef.current?.focus();
-  }, [isOpen]);
+    if (isOpen)
+      textareaRef.current?.focus()
+  }, [isOpen])
 
   const submit = () => {
     if (value.trim()) {
-      onAdd(value.trim());
-      setValue("");
-      setIsOpen(false);
+      onAdd(value.trim())
+      setValue('')
+      setIsOpen(false)
     }
-  };
+  }
 
   const cancel = () => {
-    setValue("");
-    setIsOpen(false);
-  };
+    setValue('')
+    setIsOpen(false)
+  }
 
   if (!isOpen) {
     return (
@@ -39,7 +40,7 @@ export const AddCardForm = ({ onAdd }: AddCardFormProps) => {
         <Plus className="w-4 h-4 group-hover:text-indigo-500 transition-colors" />
         Add a card
       </button>
-    );
+    )
   }
 
   return (
@@ -47,10 +48,14 @@ export const AddCardForm = ({ onAdd }: AddCardFormProps) => {
       <textarea
         ref={textareaRef}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={e => setValue(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
-          if (e.key === "Escape") cancel();
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            submit()
+          }
+          if (e.key === 'Escape')
+            cancel()
         }}
         placeholder="Card title..."
         rows={2}
@@ -72,5 +77,5 @@ export const AddCardForm = ({ onAdd }: AddCardFormProps) => {
         </button>
       </div>
     </div>
-  );
+  )
 }

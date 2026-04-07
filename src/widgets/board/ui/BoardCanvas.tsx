@@ -1,137 +1,149 @@
-"use client";
+'use client'
 
-import { useState, useCallback } from "react";
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
+import type { Card, Project } from '@/shared/types'
 import {
-  DndContext, DragOverlay, PointerSensor,
-  useSensor, useSensors,
-  DragStartEvent, DragOverEvent, DragEndEvent,
   closestCorners,
-} from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { v4 as uuidv4 } from "uuid";
-import { Project, Card } from "@/shared/types";
-import { CardItem } from "@/entities/card";
-import { ColumnContainer } from "@/features/column";
-import { CardModal } from "@/features/card-modal";
-import { AddColumnButton } from "@/widgets/board";
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import { arrayMove } from '@dnd-kit/sortable'
+import { useCallback, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { CardItem } from '@/entities/card'
+import { CardModal } from '@/features/card-modal'
+import { ColumnContainer } from '@/features/column'
+import { AddColumnButton } from '@/widgets/board'
 
 interface BoardCanvasProps {
-  project: Project;
-  onUpdateProject: (updater: (p: Project) => Project) => void;
+  project: Project
+  onUpdateProject: (updater: (p: Project) => Project) => void
 }
 
 export const BoardCanvas = ({ project, onUpdateProject }: BoardCanvasProps) => {
-  const [activeCard, setActiveCard] = useState<Card | null>(null);
-  const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [editingCard, setEditingCard] = useState<Card | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  )
 
   const findColumn = useCallback(
-    (cardId: string) => project.columns.find((col) => col.cardIds.includes(cardId)),
-    [project.columns]
-  );
+    (cardId: string) => project.columns.find(col => col.cardIds.includes(cardId)),
+    [project.columns],
+  )
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    const card = project.cards[active.id as string];
-    if (card) setActiveCard(card);
-  };
+    const card = project.cards[active.id as string]
+    if (card)
+      setActiveCard(card)
+  }
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over) return;
-    const activeId = active.id as string;
-    const overId   = over.id as string;
-    const fromCol  = findColumn(activeId);
-    if (!fromCol) return;
-    const toCol = project.columns.find((c) => c.id === overId) || findColumn(overId);
-    if (!toCol || fromCol.id === toCol.id) return;
+    if (!over)
+      return
+    const activeId = active.id as string
+    const overId = over.id as string
+    const fromCol = findColumn(activeId)
+    if (!fromCol)
+      return
+    const toCol = project.columns.find(c => c.id === overId) || findColumn(overId)
+    if (!toCol || fromCol.id === toCol.id)
+      return
 
-    onUpdateProject((p) => ({
+    onUpdateProject(p => ({
       ...p,
       columns: p.columns.map((col) => {
-        if (col.id === fromCol.id) return { ...col, cardIds: col.cardIds.filter((id) => id !== activeId) };
+        if (col.id === fromCol.id)
+          return { ...col, cardIds: col.cardIds.filter(id => id !== activeId) }
         if (col.id === toCol.id) {
-          const idx = col.cardIds.indexOf(overId);
-          const ids = [...col.cardIds];
-          idx >= 0 ? ids.splice(idx, 0, activeId) : ids.push(activeId);
-          return { ...col, cardIds: ids };
+          const idx = col.cardIds.indexOf(overId)
+          const ids = [...col.cardIds]
+          idx >= 0 ? ids.splice(idx, 0, activeId) : ids.push(activeId)
+          return { ...col, cardIds: ids }
         }
-        return col;
+        return col
       }),
       cards: { ...p.cards, [activeId]: { ...p.cards[activeId], columnId: toCol.id } },
-    }));
-  };
+    }))
+  }
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveCard(null);
-    if (!over) return;
-    const activeId = active.id as string;
-    const overId   = over.id as string;
-    const col = findColumn(activeId);
-    if (!col || findColumn(overId)?.id !== col.id) return;
-    const oldIdx = col.cardIds.indexOf(activeId);
-    const newIdx = col.cardIds.indexOf(overId);
-    if (oldIdx === newIdx) return;
-    onUpdateProject((p) => ({
+    setActiveCard(null)
+    if (!over)
+      return
+    const activeId = active.id as string
+    const overId = over.id as string
+    const col = findColumn(activeId)
+    if (!col || findColumn(overId)?.id !== col.id)
+      return
+    const oldIdx = col.cardIds.indexOf(activeId)
+    const newIdx = col.cardIds.indexOf(overId)
+    if (oldIdx === newIdx)
+      return
+    onUpdateProject(p => ({
       ...p,
-      columns: p.columns.map((c) =>
-        c.id === col.id ? { ...c, cardIds: arrayMove(c.cardIds, oldIdx, newIdx) } : c
+      columns: p.columns.map(c =>
+        c.id === col.id ? { ...c, cardIds: arrayMove(c.cardIds, oldIdx, newIdx) } : c,
       ),
-    }));
-  };
+    }))
+  }
 
   const handleAddCard = (columnId: string, title: string) => {
-    const id = uuidv4();
-    onUpdateProject((p) => ({
+    const id = uuidv4()
+    onUpdateProject(p => ({
       ...p,
-      columns: p.columns.map((c) =>
-        c.id === columnId ? { ...c, cardIds: [...c.cardIds, id] } : c
+      columns: p.columns.map(c =>
+        c.id === columnId ? { ...c, cardIds: [...c.cardIds, id] } : c,
       ),
       cards: { ...p.cards, [id]: { id, title, columnId } },
-    }));
-  };
+    }))
+  }
 
   const handleDeleteCard = (cardId: string) => {
     onUpdateProject((p) => {
-      const cards = { ...p.cards };
-      delete cards[cardId];
+      const cards = { ...p.cards }
+      delete cards[cardId]
       return {
         ...p,
-        columns: p.columns.map((c) => ({ ...c, cardIds: c.cardIds.filter((id) => id !== cardId) })),
+        columns: p.columns.map(c => ({ ...c, cardIds: c.cardIds.filter(id => id !== cardId) })),
         cards,
-      };
-    });
-  };
+      }
+    })
+  }
 
   const handleSaveCard = (updated: Card) => {
-    onUpdateProject((p) => ({ ...p, cards: { ...p.cards, [updated.id]: updated } }));
-  };
+    onUpdateProject(p => ({ ...p, cards: { ...p.cards, [updated.id]: updated } }))
+  }
 
   const handleAddColumn = (title: string) => {
-    const id = uuidv4();
-    onUpdateProject((p) => ({
+    const id = uuidv4()
+    onUpdateProject(p => ({
       ...p,
       columns: [...p.columns, { id, title, cardIds: [] }],
-    }));
-  };
+    }))
+  }
 
   const handleDeleteColumn = (columnId: string) => {
     onUpdateProject((p) => {
-      const col = p.columns.find((c) => c.id === columnId);
-      if (!col) return p;
-      const cards = { ...p.cards };
-      col.cardIds.forEach((id) => delete cards[id]);
-      return { ...p, columns: p.columns.filter((c) => c.id !== columnId), cards };
-    });
-  };
+      const col = p.columns.find(c => c.id === columnId)
+      if (!col)
+        return p
+      const cards = { ...p.cards }
+      col.cardIds.forEach(id => delete cards[id])
+      return { ...p, columns: p.columns.filter(c => c.id !== columnId), cards }
+    })
+  }
 
   const handleRenameColumn = (columnId: string, title: string) => {
-    onUpdateProject((p) => ({
+    onUpdateProject(p => ({
       ...p,
-      columns: p.columns.map((c) => (c.id === columnId ? { ...c, title } : c)),
-    }));
-  };
+      columns: p.columns.map(c => (c.id === columnId ? { ...c, title } : c)),
+    }))
+  }
 
   return (
     <>
@@ -145,7 +157,7 @@ export const BoardCanvas = ({ project, onUpdateProject }: BoardCanvasProps) => {
             onDragEnd={handleDragEnd}
           >
             {project.columns.map((column) => {
-              const cards = column.cardIds.map((id) => project.cards[id]).filter(Boolean) as Card[];
+              const cards = column.cardIds.map(id => project.cards[id]).filter(Boolean) as Card[]
               return (
                 <ColumnContainer
                   key={column.id}
@@ -156,7 +168,7 @@ export const BoardCanvas = ({ project, onUpdateProject }: BoardCanvasProps) => {
                   onDeleteColumn={handleDeleteColumn}
                   onRenameColumn={handleRenameColumn}
                 />
-              );
+              )
             })}
 
             <DragOverlay>
@@ -181,5 +193,5 @@ export const BoardCanvas = ({ project, onUpdateProject }: BoardCanvasProps) => {
         />
       )}
     </>
-  );
+  )
 }

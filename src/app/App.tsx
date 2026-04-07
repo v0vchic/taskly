@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useAppState } from "./store";
-import { Sidebar } from "@/features/sidebar";
-import { BoardHeader, BoardCanvas } from "@/widgets/board";
+import { useState } from 'react'
+import { Sidebar } from '@/features/sidebar'
+import { BoardCanvas, BoardHeader } from '@/widgets/board'
+import { useAppState } from './store'
 
 export const App = () => {
   const {
@@ -14,11 +14,11 @@ export const App = () => {
     addProject,
     renameProject,
     deleteProject,
-  } = useAppState();
+  } = useAppState()
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  const bgGradient = `linear-gradient(135deg, ${activeProject.color}bb 0%, ${activeProject.color}44 50%, #1e1b4b 100%)`;
+  const bgGradient = `linear-gradient(135deg, ${activeProject.color}bb 0%, ${activeProject.color}44 50%, #1e1b4b 100%)`
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -30,7 +30,7 @@ export const App = () => {
         onAddProject={addProject}
         onRenameProject={renameProject}
         onDeleteProject={deleteProject}
-        onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+        onToggleCollapse={() => setSidebarCollapsed(v => !v)}
       />
 
       <div
@@ -40,8 +40,8 @@ export const App = () => {
         <BoardHeader
           project={activeProject}
           sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
-          onRename={(title) => renameProject(activeProject.id, title)}
+          onToggleSidebar={() => setSidebarCollapsed(v => !v)}
+          onRename={title => renameProject(activeProject.id, title)}
         />
 
         <BoardCanvas
@@ -50,5 +50,5 @@ export const App = () => {
         />
       </div>
     </div>
-  );
+  )
 }

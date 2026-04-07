@@ -1,30 +1,37 @@
-"use client";
+'use client'
 
-import { useState, useRef, useEffect } from "react";
-import { Plus, X } from "lucide-react";
-import { PROJECT_COLORS } from "@/shared/constants";
+import { Plus, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { PROJECT_COLORS } from '@/shared/constants'
 
 interface AddProjectFormProps {
-  onAdd: (title: string, color: string) => void;
+  onAdd: (title: string, color: string) => void
 }
 
 export const AddProjectForm = ({ onAdd }: AddProjectFormProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [color, setColor] = useState<string>(PROJECT_COLORS[0]);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [title, setTitle] = useState('')
+  const [color, setColor] = useState<string>(PROJECT_COLORS[0])
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
+  useEffect(() => {
+    if (isOpen)
+      inputRef.current?.focus()
+  }, [isOpen])
 
   const submit = () => {
-    if (!title.trim()) return;
-    onAdd(title.trim(), color);
-    setTitle("");
-    setColor(PROJECT_COLORS[0]);
-    setIsOpen(false);
-  };
+    if (!title.trim())
+      return
+    onAdd(title.trim(), color)
+    setTitle('')
+    setColor(PROJECT_COLORS[0])
+    setIsOpen(false)
+  }
 
-  const cancel = () => { setTitle(""); setIsOpen(false); };
+  const cancel = () => {
+    setTitle('')
+    setIsOpen(false)
+  }
 
   if (!isOpen) {
     return (
@@ -36,7 +43,7 @@ export const AddProjectForm = ({ onAdd }: AddProjectFormProps) => {
         <Plus className="w-4 h-4 flex-shrink-0" />
         <span className="text-xs font-medium">New project</span>
       </button>
-    );
+    )
   }
 
   return (
@@ -44,10 +51,12 @@ export const AddProjectForm = ({ onAdd }: AddProjectFormProps) => {
       <input
         ref={inputRef}
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={e => setTitle(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") submit();
-          if (e.key === "Escape") cancel();
+          if (e.key === 'Enter')
+            submit()
+          if (e.key === 'Escape')
+            cancel()
         }}
         placeholder="Project name..."
         className="w-full text-xs text-white bg-white/10 border border-white/20 rounded-lg
@@ -55,15 +64,15 @@ export const AddProjectForm = ({ onAdd }: AddProjectFormProps) => {
       />
 
       <div className="flex gap-1.5 flex-wrap">
-        {PROJECT_COLORS.map((c) => (
+        {PROJECT_COLORS.map(c => (
           <button
             key={c}
             onClick={() => setColor(c)}
             className="w-5 h-5 rounded-full transition-transform hover:scale-110 flex-shrink-0"
             style={{
               backgroundColor: c,
-              outline: color === c ? `2px solid ${c}` : "none",
-              outlineOffset: "2px",
+              outline: color === c ? `2px solid ${c}` : 'none',
+              outlineOffset: '2px',
             }}
           />
         ))}
@@ -86,5 +95,5 @@ export const AddProjectForm = ({ onAdd }: AddProjectFormProps) => {
         </button>
       </div>
     </div>
-  );
+  )
 }

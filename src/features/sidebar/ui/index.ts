@@ -1,3 +1,3 @@
-export { Sidebar } from "./Sidebar";
-export { ProjectItem } from "./ProjectItem";
-export { AddProjectForm } from "./AddProjectForm";
+export { AddProjectForm } from './AddProjectForm'
+export { ProjectItem } from './ProjectItem'
+export { Sidebar } from './Sidebar'
