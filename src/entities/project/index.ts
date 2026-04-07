@@ -1,0 +1,1 @@
+export { initialAppState } from './initialData'
