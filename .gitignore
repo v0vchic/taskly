@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -11,15 +11,11 @@
 /coverage
 
 # next.js
-/.next/
+.next
 /out/
 
 # production
 /build
-
-# misc
-.DS_Store
-*.pem
 
 # debug
 npm-debug.log*
@@ -27,7 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files
-.env*
+.env
 
 # vercel
 .vercel
@@ -39,3 +35,5 @@ next-env.d.ts
 # IDE
 .idea
 .vscode
+
+dist/

@@ -1,0 +1,45 @@
+import 'reflect-metadata'
+import { NestFactory } from '@nestjs/core'
+import { ValidationPipe } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { AppModule } from './app.module'
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule)
+
+  const config = app.get(ConfigService)
+
+  app.setGlobalPrefix('api')
+
+  app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true }),
+  )
+
+  app.enableCors({
+    origin: config.get<string>('FRONTEND_URL'),
+    credentials: true,
+  })
+
+  const swaggerConfig = new DocumentBuilder()
+      .setTitle('Taskly API')
+      .setDescription(
+          'REST API для Taskly'
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build()
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig)
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })
+
+  const PORT = config.get<number>('PORT') ?? 3001
+  await app.listen(PORT)
+  console.log(`Server running on port ${PORT}`)
+}
+
+bootstrap()
