@@ -6,8 +6,8 @@ import { User } from './user.entity'
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepo: Repository<User>,
+      @InjectRepository(User)
+      private readonly usersRepo: Repository<User>,
   ) {}
 
   findByEmail(email: string): Promise<User | null> {
@@ -16,5 +16,9 @@ export class UsersService {
 
   findById(id: string): Promise<User | null> {
     return this.usersRepo.findOne({ where: { id } })
+  }
+
+  findAll(): Promise<User[]> {
+    return this.usersRepo.find({ order: { createdAt: 'ASC' } })
   }
 }

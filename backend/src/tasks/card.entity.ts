@@ -9,6 +9,7 @@ import {
 } from 'typeorm'
 import { BoardColumn } from '../projects/board-column.entity'
 import { CardLabel } from './card-label.entity'
+import { User } from '../users/user.entity'
 
 @Entity('card')
 export class Card {
@@ -36,4 +37,8 @@ export class Card {
 
   @OneToMany(() => CardLabel, (label) => label.card, { cascade: true, eager: true })
   labels: CardLabel[]
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL', eager: true })
+  @JoinColumn({ name: 'assignee_id' })
+  assignee: User | null
 }

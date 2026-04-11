@@ -10,6 +10,17 @@ interface CardItemProps {
   onEdit: (card: Card) => void
 }
 
+function getInitials(email: string): string {
+  return email.split('@')[0].slice(0, 2).toUpperCase()
+}
+
+function getAvatarColor(email: string): string {
+  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#ef4444']
+  let hash = 0
+  for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
+  return colors[Math.abs(hash) % colors.length]
+}
+
 export const CardItem = ({ card, onEdit }: CardItemProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging }
     = useSortable({ id: card.id })
@@ -24,6 +35,7 @@ export const CardItem = ({ card, onEdit }: CardItemProps) => {
       {...attributes}
       {...listeners}
     >
+      {/* Labels */}
       {card.labels && card.labels.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2.5">
           {card.labels.map(label => (
@@ -40,22 +52,37 @@ export const CardItem = ({ card, onEdit }: CardItemProps) => {
 
       <p className="text-sm font-medium text-slate-800 leading-snug">{card.title}</p>
 
-      {(card.description || card.dueDate) && (
-        <div className="flex items-center gap-3 mt-2.5">
-          {card.description && (
-            <span className="flex items-center gap-1 text-xs text-slate-400">
-              <AlignLeft className="w-3 h-3" />
-            </span>
-          )}
-          {card.dueDate && (
-            <span className="flex items-center gap-1 text-xs text-slate-400">
-              <Calendar className="w-3 h-3" />
-              {card.dueDate}
-            </span>
+      {/* Footer row: icons + assignee avatar */}
+      {(card.description || card.dueDate || card.assigneeEmail) && (
+        <div className="flex items-center justify-between mt-2.5">
+          <div className="flex items-center gap-3">
+            {card.description && (
+              <span className="flex items-center gap-1 text-xs text-slate-400">
+                <AlignLeft className="w-3 h-3" />
+              </span>
+            )}
+            {card.dueDate && (
+              <span className="flex items-center gap-1 text-xs text-slate-400">
+                <Calendar className="w-3 h-3" />
+                {card.dueDate}
+              </span>
+            )}
+          </div>
+
+          {/* Assignee avatar */}
+          {card.assigneeEmail && (
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+              style={{ backgroundColor: getAvatarColor(card.assigneeEmail) }}
+              title={card.assigneeEmail}
+            >
+              {getInitials(card.assigneeEmail)}
+            </div>
           )}
         </div>
       )}
 
+      {/* Edit button */}
       <button
         onClick={(e) => { e.stopPropagation(); onEdit(card) }}
         onPointerDown={e => e.stopPropagation()}

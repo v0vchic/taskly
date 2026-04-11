@@ -65,7 +65,12 @@ export const App = () => {
           onLogout={() => setUser(null)}
         />
 
-        <BoardCanvas project={activeProject} role={user.role} onUpdateProject={updateActiveProject} />
+        <BoardCanvas
+          project={activeProject}
+          role={user.role}
+          token={user.token}
+          onUpdateProject={updateActiveProject}
+        />
       </div>
     </div>
   )

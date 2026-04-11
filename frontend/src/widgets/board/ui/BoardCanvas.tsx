@@ -1,27 +1,42 @@
 'use client'
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
-import type { Card, Project, UserRole } from '@/shared/types'
+import type { AppUser, Card, Project, UserRole } from '@/shared/types'
 import { closestCorners, DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { CardItem } from '@/entities/card'
 import { CardModal } from '@/features/card-modal'
 import { ColumnContainer } from '@/features/column'
+import { API_BASE } from '@/shared/constants'
 import { AddColumnButton } from '@/widgets/board'
 
 interface BoardCanvasProps {
   project: Project
   role: UserRole
+  token: string
   onUpdateProject: (updater: (p: Project) => Project) => void
 }
 
-export const BoardCanvas = ({ project, role, onUpdateProject }: BoardCanvasProps) => {
+export const BoardCanvas = ({ project, role, token, onUpdateProject }: BoardCanvasProps) => {
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  const [users, setUsers] = useState<AppUser[]>([])
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
+  // Load users list once (needed for assignee selector)
+  useEffect(() => {
+    if (!token)
+      return
+    fetch(`${API_BASE}/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(setUsers)
+      .catch(() => setUsers([]))
+  }, [token])
 
   const findColumn = useCallback(
     (cardId: string) => project.columns.find(col => col.cardIds.includes(cardId)),
@@ -152,7 +167,14 @@ export const BoardCanvas = ({ project, role, onUpdateProject }: BoardCanvasProps
         </div>
       </div>
       {editingCard && (
-        <CardModal card={editingCard} onClose={() => setEditingCard(null)} onSave={handleSaveCard} onDelete={handleDeleteCard} />
+        <CardModal
+          card={editingCard}
+          users={users}
+          role={role}
+          onClose={() => setEditingCard(null)}
+          onSave={handleSaveCard}
+          onDelete={handleDeleteCard}
+        />
       )}
     </>
   )

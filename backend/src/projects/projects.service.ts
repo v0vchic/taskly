@@ -8,7 +8,6 @@ import { Project } from './project.entity'
 import { BoardColumn } from './board-column.entity'
 import { Card } from '../tasks/card.entity'
 
-/** Shape returned to frontend — mirrors the frontend Project type */
 export interface ProjectDto {
   id: string;
   title: string;
@@ -24,6 +23,8 @@ export interface CardDto {
   dueDate?: string;
   columnId: string;
   labels: LabelDto[];
+  assigneeId?: string;
+  assigneeEmail?: string;
 }
 
 export interface LabelDto {
@@ -41,15 +42,13 @@ export interface ColumnDto {
 @Injectable()
 export class ProjectsService {
   constructor(
-    @InjectRepository(Project)
-    private readonly projectRepo: Repository<Project>,
-    @InjectRepository(BoardColumn)
-    private readonly columnRepo: Repository<BoardColumn>,
-    @InjectRepository(Card)
-    private readonly cardRepo: Repository<Card>,
+      @InjectRepository(Project)
+      private readonly projectRepo: Repository<Project>,
+      @InjectRepository(BoardColumn)
+      private readonly columnRepo: Repository<BoardColumn>,
+      @InjectRepository(Card)
+      private readonly cardRepo: Repository<Card>,
   ) {}
-
-  /* ── helpers ── */
 
   private async buildDto(project: Project): Promise<ProjectDto> {
     const columns = await this.columnRepo.find({
@@ -63,7 +62,7 @@ export class ProjectsService {
     for (const col of columns) {
       const colCards = await this.cardRepo.find({
         where: { column: { id: col.id } },
-        relations: ['labels'],
+        relations: ['labels', 'assignee'],
         order: { position: 'ASC' },
       })
       columnDtos.push({ id: col.id, title: col.title, cardIds: colCards.map((c) => c.id) })
@@ -75,14 +74,14 @@ export class ProjectsService {
           dueDate: card.dueDate ?? undefined,
           columnId: col.id,
           labels: card.labels.map((l) => ({ id: l.id, text: l.text, color: l.color })),
+          assigneeId: card.assignee?.id ?? undefined,
+          assigneeEmail: card.assignee?.email ?? undefined,
         }
       }
     }
 
     return { id: project.id, title: project.title, color: project.color, columns: columnDtos, cards }
   }
-
-  /* ── public API ── */
 
   async findAll(): Promise<ProjectDto[]> {
     const projects = await this.projectRepo.find({ order: { createdAt: 'ASC' } })
@@ -95,7 +94,6 @@ export class ProjectsService {
     return this.buildDto(project)
   }
 
-  /** Manager only: create project with default columns */
   async create(title: string, color: string, ownerId: string): Promise<ProjectDto> {
     const project = this.projectRepo.create({ title, color, owner: { id: ownerId } })
     await this.projectRepo.save(project)
@@ -103,13 +101,12 @@ export class ProjectsService {
     const defaultCols = ['To Do', 'In Progress', 'Done']
     for (let i = 0; i < defaultCols.length; i++) {
       await this.columnRepo.save(
-        this.columnRepo.create({ title: defaultCols[i], position: i, project }),
+          this.columnRepo.create({ title: defaultCols[i], position: i, project }),
       )
     }
     return this.findOne(project.id)
   }
 
-  /** Manager only: rename project */
   async rename(id: string, title: string): Promise<ProjectDto> {
     const project = await this.projectRepo.findOne({ where: { id } })
     if (!project) throw new NotFoundException('Project not found')
@@ -118,7 +115,6 @@ export class ProjectsService {
     return this.findOne(id)
   }
 
-  /** Manager only: change color */
   async updateColor(id: string, color: string): Promise<ProjectDto> {
     const project = await this.projectRepo.findOne({ where: { id } })
     if (!project) throw new NotFoundException('Project not found')
@@ -127,21 +123,18 @@ export class ProjectsService {
     return this.findOne(id)
   }
 
-  /** Manager only: delete project */
   async remove(id: string): Promise<void> {
     const project = await this.projectRepo.findOne({ where: { id } })
     if (!project) throw new NotFoundException('Project not found')
     await this.projectRepo.remove(project)
   }
 
-  /* ── columns ── */
-
   async addColumn(projectId: string, title: string): Promise<ProjectDto> {
     const project = await this.projectRepo.findOne({ where: { id: projectId } })
     if (!project) throw new NotFoundException('Project not found')
     const count = await this.columnRepo.count({ where: { project: { id: projectId } } })
     await this.columnRepo.save(
-      this.columnRepo.create({ title, position: count, project }),
+        this.columnRepo.create({ title, position: count, project }),
     )
     return this.findOne(projectId)
   }
@@ -168,8 +161,6 @@ export class ProjectsService {
     return this.findOne(projectId)
   }
 
-  /* ── cards ── */
-
   async addCard(columnId: string, title: string): Promise<ProjectDto> {
     const col = await this.columnRepo.findOne({
       where: { id: columnId },
@@ -178,18 +169,24 @@ export class ProjectsService {
     if (!col) throw new NotFoundException('Column not found')
     const count = await this.cardRepo.count({ where: { column: { id: columnId } } })
     await this.cardRepo.save(
-      this.cardRepo.create({ title, position: count, column: col }),
+        this.cardRepo.create({ title, position: count, column: col }),
     )
     return this.findOne(col.project.id)
   }
 
   async updateCard(
-    cardId: string,
-    data: { title?: string; description?: string; dueDate?: string; labels?: LabelDto[] },
+      cardId: string,
+      data: {
+        title?: string;
+        description?: string;
+        dueDate?: string;
+        labels?: LabelDto[];
+        assigneeId?: string | null;
+      },
   ): Promise<ProjectDto> {
     const card = await this.cardRepo.findOne({
       where: { id: cardId },
-      relations: ['column', 'column.project', 'labels'],
+      relations: ['column', 'column.project', 'labels', 'assignee'],
     })
     if (!card) throw new NotFoundException('Card not found')
 
@@ -197,10 +194,19 @@ export class ProjectsService {
     if (data.description !== undefined) card.description = data.description
     if (data.dueDate !== undefined) card.dueDate = data.dueDate
 
+    // Handle assignee
+    if ('assigneeId' in data) {
+      if (data.assigneeId === null || data.assigneeId === undefined) {
+        card.assignee = null
+      } else {
+        card.assignee = { id: data.assigneeId } as any
+      }
+    }
+
     if (data.labels !== undefined) {
-      // Replace labels via cascade
+      const { CardLabel } = require('../tasks/card-label.entity')
       card.labels = data.labels.map((l) => {
-        const label = new (require('../tasks/card-label.entity').CardLabel)()
+        const label = new CardLabel()
         label.text = l.text
         label.color = l.color
         return label
@@ -223,9 +229,9 @@ export class ProjectsService {
   }
 
   async moveCard(
-    cardId: string,
-    targetColumnId: string,
-    newPosition: number,
+      cardId: string,
+      targetColumnId: string,
+      newPosition: number,
   ): Promise<ProjectDto> {
     const card = await this.cardRepo.findOne({
       where: { id: cardId },
@@ -241,7 +247,6 @@ export class ProjectsService {
     card.position = newPosition
     await this.cardRepo.save(card)
 
-    // Re-number positions in target column
     const colCards = await this.cardRepo.find({
       where: { column: { id: targetColumnId } },
       order: { position: 'ASC' },

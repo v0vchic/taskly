@@ -38,6 +38,7 @@ export class InitSchema1700000000000 implements MigrationInterface {
         "due_date"    VARCHAR(20),
         "position"    INTEGER NOT NULL DEFAULT 0,
         "column_id"   UUID NOT NULL REFERENCES "board_column"("id") ON DELETE CASCADE,
+        "assignee_id" UUID REFERENCES "user"("id") ON DELETE SET NULL,
         "created_at"  TIMESTAMPTZ NOT NULL DEFAULT now()
       );
 

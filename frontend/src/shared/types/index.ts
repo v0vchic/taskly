@@ -11,6 +11,8 @@ export interface Card {
   labels?: CardLabel[]
   dueDate?: string
   columnId: string
+  assigneeId?: string
+  assigneeEmail?: string
 }
 
 export interface Column {
@@ -39,4 +41,10 @@ export interface AuthUser {
   email: string
   role: UserRole
   token: string
+}
+
+export interface AppUser {
+  id: string
+  email: string
+  role: UserRole
 }

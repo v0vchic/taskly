@@ -18,7 +18,6 @@ import { Roles } from '../common/decorators/roles.decorator'
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
-  /** Any authenticated user can read projects */
   @Get()
   findAll() {
     return this.projectsService.findAll()
@@ -29,35 +28,29 @@ export class ProjectsController {
     return this.projectsService.findOne(id)
   }
 
-  /** Manager only: create project */
   @Post()
   @Roles('manager')
   create(@Body() body: { title: string; color?: string; ownerId: string }) {
     return this.projectsService.create(body.title, body.color ?? '#6366f1', body.ownerId)
   }
 
-  /** Manager only: rename project */
   @Patch(':id/rename')
   @Roles('manager')
   rename(@Param('id') id: string, @Body() body: { title: string }) {
     return this.projectsService.rename(id, body.title)
   }
 
-  /** Manager only: change project color */
   @Patch(':id/color')
   @Roles('manager')
   updateColor(@Param('id') id: string, @Body() body: { color: string }) {
     return this.projectsService.updateColor(id, body.color)
   }
 
-  /** Manager only: delete project */
   @Delete(':id')
   @Roles('manager')
   remove(@Param('id') id: string) {
     return this.projectsService.remove(id)
   }
-
-  /* ── Columns — manager only ── */
 
   @Post(':id/columns')
   @Roles('manager')
@@ -87,8 +80,6 @@ export class ProjectsController {
     return this.projectsService.reorderColumns(id, body.columnIds)
   }
 
-  /* ── Cards (any authenticated user) ── */
-
   @Post(':id/columns/:colId/cards')
   addCard(@Param('colId') colId: string, @Body() body: { title: string }) {
     return this.projectsService.addCard(colId, body.title)
@@ -102,6 +93,7 @@ export class ProjectsController {
         description?: string;
         dueDate?: string;
         labels?: { id: string; text: string; color: string }[];
+        assigneeId?: string | null;
       },
   ) {
     return this.projectsService.updateCard(cardId, body)

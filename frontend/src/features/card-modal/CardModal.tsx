@@ -1,25 +1,41 @@
 'use client'
 
-import type { Card, CardLabel } from '@/shared/types'
-import { AlignLeft, Calendar, Tag, Trash2, X } from 'lucide-react'
+import type { AppUser, Card, CardLabel } from '@/shared/types'
+import { AlignLeft, Calendar, Tag, Trash2, User, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { LABEL_COLORS } from '@/shared/constants'
 
 interface CardModalProps {
   card: Card
+  users: AppUser[]
+  role: 'manager' | 'developer'
   onClose: () => void
   onSave: (updated: Card) => void
   onDelete: (cardId: string) => void
 }
 
-export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) => {
+function getInitials(email: string): string {
+  return email.split('@')[0].slice(0, 2).toUpperCase()
+}
+
+function getAvatarColor(email: string): string {
+  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#ef4444']
+  let hash = 0
+  for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
+  return colors[Math.abs(hash) % colors.length]
+}
+
+export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: CardModalProps) => {
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
   const [dueDate, setDueDate] = useState(card.dueDate || '')
   const [labels, setLabels] = useState<CardLabel[]>(card.labels || [])
+  const [assigneeId, setAssigneeId] = useState<string>(card.assigneeId || '')
   const [newLabelText, setNewLabelText] = useState('')
   const [newLabelColor, setNewLabelColor] = useState<string>(LABEL_COLORS[0])
   const [showLabelInput, setShowLabelInput] = useState(false)
+
+  const isManager = role === 'manager'
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -33,7 +49,16 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
   const handleSave = () => {
     if (!title.trim())
       return
-    onSave({ ...card, title: title.trim(), description, dueDate, labels })
+    const assignee = users.find(u => u.id === assigneeId)
+    onSave({
+      ...card,
+      title: title.trim(),
+      description,
+      dueDate,
+      labels,
+      assigneeId: assigneeId || undefined,
+      assigneeEmail: assignee?.email || undefined,
+    })
     onClose()
   }
 
@@ -45,6 +70,8 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
     setShowLabelInput(false)
   }
 
+  const selectedAssignee = users.find(u => u.id === assigneeId)
+
   return (
     <div
       className="card-modal-container fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -55,6 +82,7 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
       }}
     >
       <div className="card-modal-box bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
           <h2 className="text-base font-bold text-slate-800">Edit Card</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
@@ -63,6 +91,7 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
         </div>
 
         <div className="p-5 space-y-4 max-h-[70dvh] overflow-y-auto">
+          {/* Title */}
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block">Title</label>
             <input
@@ -74,6 +103,7 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <AlignLeft className="w-3.5 h-3.5" />
@@ -89,6 +119,7 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
             />
           </div>
 
+          {/* Due Date */}
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
@@ -103,6 +134,71 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
             />
           </div>
 
+          {/* Assignee — manager only for editing, everyone sees it */}
+          <div>
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" />
+              {' '}
+              Assignee
+            </label>
+            {isManager
+              ? (
+                  <div className="space-y-2">
+                    <select
+                      value={assigneeId}
+                      onChange={e => setAssigneeId(e.target.value)}
+                      className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow bg-white"
+                    >
+                      <option value="">— Unassigned —</option>
+                      {users.map(u => (
+                        <option key={u.id} value={u.id}>
+                          {u.email}
+                          {' '}
+                          (
+                          {u.role}
+                          )
+                        </option>
+                      ))}
+                    </select>
+                    {selectedAssignee && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded-xl border border-indigo-100">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                          style={{ backgroundColor: getAvatarColor(selectedAssignee.email) }}
+                        >
+                          {getInitials(selectedAssignee.email)}
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-700">{selectedAssignee.email}</p>
+                          <p className="text-xs text-slate-400 capitalize">{selectedAssignee.role}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              : (
+                  selectedAssignee
+                    ? (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                            style={{ backgroundColor: getAvatarColor(selectedAssignee.email) }}
+                          >
+                            {getInitials(selectedAssignee.email)}
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-700">{selectedAssignee.email}</p>
+                            <p className="text-xs text-slate-400 capitalize">{selectedAssignee.role}</p>
+                          </div>
+                        </div>
+                      )
+                    : (
+                        <p className="text-sm text-slate-400 px-1">Not assigned</p>
+                      )
+                )}
+          </div>
+
+          {/* Labels */}
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Tag className="w-3.5 h-3.5" />
@@ -157,6 +253,7 @@ export const CardModal = ({ card, onClose, onSave, onDelete }: CardModalProps) =
           </div>
         </div>
 
+        {/* Footer */}
         <div className="flex items-center justify-between px-5 py-4 bg-slate-50 border-t border-slate-100">
           <button onClick={() => { onDelete(card.id); onClose() }} className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 font-medium transition-colors">
             <Trash2 className="w-4 h-4" />

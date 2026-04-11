@@ -113,7 +113,8 @@ export const ProjectItem = ({
           {canDelete && (
             <button
               onMouseDown={(e) => {
-                e.stopPropagation(); e.preventDefault()
+                e.stopPropagation()
+                e.preventDefault()
                 if (confirmDelete)
                   onDelete()
                 else setConfirmDelete(true)
