@@ -100,8 +100,6 @@ async function seed() {
 
   const [
     col1, col2, col3, col4,
-    colM1, colM2, colM3,
-    colD1, colD2, colD3,
   ] = columns
 
   // Cards project1

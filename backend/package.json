@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "back dev": "nest start --watch",
-    "build": "nest build",
+    "back build": "nest build",
     "start": "nest start",
     "start:prod": "node dist/main",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
-    "setup": "npm run build && npm run seed",
     "migration:run": "npx typeorm -d dist/database/data-source.js migration:run",
     "migration:revert": "npx typeorm -d dist/database/data-source.js migration:revert",
     "lint:fix": "eslint \"src/**/*.ts\" --fix"

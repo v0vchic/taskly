@@ -48,3 +48,11 @@ export interface AppUser {
   email: string
   role: UserRole
 }
+
+export interface CardComment {
+  id: string
+  text: string
+  authorId: string | null
+  authorEmail: string | null
+  createdAt: string
+}

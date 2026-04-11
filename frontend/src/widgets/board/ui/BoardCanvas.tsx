@@ -1,11 +1,17 @@
 'use client'
 
 import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
-import type { AppUser, Card, Project, UserRole } from '@/shared/types'
-import { closestCorners, DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { AppUser, AuthUser, Card, Project, UserRole } from '@/shared/types'
+import {
+  closestCorners,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useCallback, useEffect, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import { CardItem } from '@/entities/card'
 import { CardModal } from '@/features/card-modal'
 import { ColumnContainer } from '@/features/column'
@@ -15,28 +21,46 @@ import { AddColumnButton } from '@/widgets/board'
 interface BoardCanvasProps {
   project: Project
   role: UserRole
-  token: string
+  currentUser: AuthUser
+  onAddColumn: (projectId: string, title: string) => Promise<void>
+  onRenameColumn: (projectId: string, colId: string, title: string) => Promise<void>
+  onDeleteColumn: (projectId: string, colId: string) => Promise<void>
+  onAddCard: (projectId: string, colId: string, title: string) => Promise<void>
+  onUpdateCard: (projectId: string, cardId: string, data: any) => Promise<void>
+  onDeleteCard: (projectId: string, cardId: string) => Promise<void>
+  onMoveCard: (projectId: string, cardId: string, targetColId: string, position: number) => Promise<void>
   onUpdateProject: (updater: (p: Project) => Project) => void
 }
 
-export const BoardCanvas = ({ project, role, token, onUpdateProject }: BoardCanvasProps) => {
+export const BoardCanvas = ({
+  project,
+  role,
+  currentUser,
+  onAddColumn,
+  onRenameColumn,
+  onDeleteColumn,
+  onAddCard,
+  onUpdateCard,
+  onDeleteCard,
+  onMoveCard,
+  onUpdateProject,
+}: BoardCanvasProps) => {
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
   const [users, setUsers] = useState<AppUser[]>([])
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  )
 
-  // Load users list once (needed for assignee selector)
   useEffect(() => {
-    if (!token)
-      return
     fetch(`${API_BASE}/users`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${currentUser.token}` },
     })
       .then(r => r.ok ? r.json() : [])
       .then(setUsers)
       .catch(() => setUsers([]))
-  }, [token])
+  }, [currentUser.token])
 
   const findColumn = useCallback(
     (cardId: string) => project.columns.find(col => col.cardIds.includes(cardId)),
@@ -60,6 +84,7 @@ export const BoardCanvas = ({ project, role, token, onUpdateProject }: BoardCanv
     const toCol = project.columns.find(c => c.id === overId) || findColumn(overId)
     if (!toCol || fromCol.id === toCol.id)
       return
+
     onUpdateProject(p => ({
       ...p,
       columns: p.columns.map((col) => {
@@ -78,68 +103,73 @@ export const BoardCanvas = ({ project, role, token, onUpdateProject }: BoardCanv
   }
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    const activeId = active.id as string
     setActiveCard(null)
+
     if (!over)
       return
-    const activeId = active.id as string
     const overId = over.id as string
     const col = findColumn(activeId)
-    if (!col || findColumn(overId)?.id !== col.id)
-      return
-    const oldIdx = col.cardIds.indexOf(activeId)
-    const newIdx = col.cardIds.indexOf(overId)
-    if (oldIdx === newIdx)
-      return
-    onUpdateProject(p => ({
-      ...p,
-      columns: p.columns.map(c => c.id === col.id ? { ...c, cardIds: arrayMove(c.cardIds, oldIdx, newIdx) } : c),
-    }))
+
+    if (col) {
+      const sameCol = findColumn(overId)?.id === col.id
+      if (sameCol) {
+        const oldIdx = col.cardIds.indexOf(activeId)
+        const newIdx = col.cardIds.indexOf(overId)
+        if (oldIdx !== newIdx) {
+          onUpdateProject(p => ({
+            ...p,
+            columns: p.columns.map(c =>
+              c.id === col.id ? { ...c, cardIds: arrayMove(c.cardIds, oldIdx, newIdx) } : c,
+            ),
+          }))
+        }
+      }
+    }
+
+    // Find final column & position after optimistic update and call API
+    const finalCol = project.columns.find(c => c.cardIds.includes(activeId))
+    if (finalCol) {
+      const position = finalCol.cardIds.indexOf(activeId)
+      onMoveCard(project.id, activeId, finalCol.id, Math.max(position, 0))
+    }
   }
 
-  const handleAddCard = (columnId: string, title: string) => {
-    const id = uuidv4()
-    onUpdateProject(p => ({
-      ...p,
-      columns: p.columns.map(c => c.id === columnId ? { ...c, cardIds: [...c.cardIds, id] } : c),
-      cards: { ...p.cards, [id]: { id, title, columnId } },
-    }))
-  }
-
-  const handleDeleteCard = (cardId: string) => {
-    onUpdateProject((p) => {
-      const cards = { ...p.cards }
-      delete cards[cardId]
-      return { ...p, columns: p.columns.map(c => ({ ...c, cardIds: c.cardIds.filter(id => id !== cardId) })), cards }
-    })
-  }
+  const handleAddCard = (columnId: string, title: string) =>
+    onAddCard(project.id, columnId, title)
 
   const handleSaveCard = (updated: Card) =>
-    onUpdateProject(p => ({ ...p, cards: { ...p.cards, [updated.id]: updated } }))
-
-  const handleAddColumn = (title: string) => {
-    const id = uuidv4()
-    onUpdateProject(p => ({ ...p, columns: [...p.columns, { id, title, cardIds: [] }] }))
-  }
-
-  const handleDeleteColumn = (columnId: string) => {
-    onUpdateProject((p) => {
-      const col = p.columns.find(c => c.id === columnId)
-      if (!col)
-        return p
-      const cards = { ...p.cards }
-      col.cardIds.forEach(id => delete cards[id])
-      return { ...p, columns: p.columns.filter(c => c.id !== columnId), cards }
+    onUpdateCard(project.id, updated.id, {
+      title: updated.title,
+      description: updated.description,
+      dueDate: updated.dueDate,
+      labels: updated.labels,
+      assigneeId: updated.assigneeId ?? null,
     })
-  }
+
+  const handleDeleteCard = (cardId: string) =>
+    onDeleteCard(project.id, cardId)
+
+  const handleAddColumn = (title: string) =>
+    onAddColumn(project.id, title)
+
+  const handleDeleteColumn = (columnId: string) =>
+    onDeleteColumn(project.id, columnId)
 
   const handleRenameColumn = (columnId: string, title: string) =>
-    onUpdateProject(p => ({ ...p, columns: p.columns.map(c => c.id === columnId ? { ...c, title } : c) }))
+    onRenameColumn(project.id, columnId, title)
 
   return (
     <>
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
         <div className="board-columns-wrapper flex gap-5 p-6 items-start h-full">
-          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
             {project.columns.map((column) => {
               const cards = column.cardIds.map(id => project.cards[id]).filter(Boolean) as Card[]
               return (
@@ -166,11 +196,13 @@ export const BoardCanvas = ({ project, role, token, onUpdateProject }: BoardCanv
           {role === 'manager' && <AddColumnButton onAdd={handleAddColumn} />}
         </div>
       </div>
+
       {editingCard && (
         <CardModal
           card={editingCard}
           users={users}
           role={role}
+          currentUser={currentUser}
           onClose={() => setEditingCard(null)}
           onSave={handleSaveCard}
           onDelete={handleDeleteCard}

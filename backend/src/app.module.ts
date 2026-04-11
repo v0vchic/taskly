@@ -9,6 +9,7 @@ import { Project } from './projects/project.entity'
 import { BoardColumn } from './projects/board-column.entity'
 import { Card } from './tasks/card.entity'
 import { CardLabel } from './tasks/card-label.entity'
+import { CardComment } from './tasks/card-comment.entity'
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { CardLabel } from './tasks/card-label.entity'
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Project, BoardColumn, Card, CardLabel],
+        entities: [User, Project, BoardColumn, Card, CardLabel, CardComment],
         migrations: ['dist/database/migrations/*{.ts,.js}'],
         migrationsRun: true,
         synchronize: false,

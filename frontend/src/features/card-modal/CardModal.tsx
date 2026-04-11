@@ -3,12 +3,15 @@
 import type { AppUser, Card, CardLabel } from '@/shared/types'
 import { AlignLeft, Calendar, Tag, Trash2, User, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { CommentsSection } from '@/features/card-modal/CommentSection'
 import { LABEL_COLORS } from '@/shared/constants'
+import { useComments } from './useComments'
 
 interface CardModalProps {
   card: Card
   users: AppUser[]
   role: 'manager' | 'developer'
+  currentUser: AppUser & { token: string }
   onClose: () => void
   onSave: (updated: Card) => void
   onDelete: (cardId: string) => void
@@ -25,7 +28,7 @@ function getAvatarColor(email: string): string {
   return colors[Math.abs(hash) % colors.length]
 }
 
-export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: CardModalProps) => {
+export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onDelete }: CardModalProps) => {
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
   const [dueDate, setDueDate] = useState(card.dueDate || '')
@@ -34,6 +37,8 @@ export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: Card
   const [newLabelText, setNewLabelText] = useState('')
   const [newLabelColor, setNewLabelColor] = useState<string>(LABEL_COLORS[0])
   const [showLabelInput, setShowLabelInput] = useState(false)
+
+  const { comments, loading, addComment, editComment, deleteComment } = useComments(card.id, currentUser.token)
 
   const isManager = role === 'manager'
 
@@ -81,7 +86,7 @@ export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: Card
           onClose()
       }}
     >
-      <div className="card-modal-box bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="card-modal-box bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
           <h2 className="text-base font-bold text-slate-800">Edit Card</h2>
@@ -90,7 +95,7 @@ export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: Card
           </button>
         </div>
 
-        <div className="p-5 space-y-4 max-h-[70dvh] overflow-y-auto">
+        <div className="p-5 space-y-4 max-h-[75dvh] overflow-y-auto">
           {/* Title */}
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block">Title</label>
@@ -134,7 +139,7 @@ export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: Card
             />
           </div>
 
-          {/* Assignee — manager only for editing, everyone sees it */}
+          {/* Assignee */}
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5" />
@@ -251,6 +256,20 @@ export const CardModal = ({ card, users, role, onClose, onSave, onDelete }: Card
                   </button>
                 )}
           </div>
+
+          {/* Divider */}
+          <div className="border-t border-slate-100 pt-1" />
+
+          {/* Comments */}
+          <CommentsSection
+            comments={comments}
+            loading={loading}
+            currentUserId={currentUser.id}
+            currentUserRole={role}
+            onAdd={addComment}
+            onEdit={editComment}
+            onDelete={deleteComment}
+          />
         </div>
 
         {/* Footer */}
