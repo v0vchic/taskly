@@ -97,7 +97,6 @@ export class ProjectsService {
   async create(title: string, color: string, ownerId: string): Promise<ProjectDto> {
     const project = this.projectRepo.create({ title, color, owner: { id: ownerId } })
     await this.projectRepo.save(project)
-
     const defaultCols = ['To Do', 'In Progress', 'Done']
     for (let i = 0; i < defaultCols.length; i++) {
       await this.columnRepo.save(
@@ -184,9 +183,10 @@ export class ProjectsService {
         assigneeId?: string | null;
       },
   ): Promise<ProjectDto> {
+    // Load card without eager relations to avoid conflicts
     const card = await this.cardRepo.findOne({
       where: { id: cardId },
-      relations: ['column', 'column.project', 'labels', 'assignee'],
+      relations: ['column', 'column.project', 'labels'],
     })
     if (!card) throw new NotFoundException('Card not found')
 
@@ -194,26 +194,38 @@ export class ProjectsService {
     if (data.description !== undefined) card.description = data.description
     if (data.dueDate !== undefined) card.dueDate = data.dueDate
 
-    // Handle assignee
-    if ('assigneeId' in data) {
-      if (data.assigneeId === null || data.assigneeId === undefined) {
-        card.assignee = null
-      } else {
-        card.assignee = { id: data.assigneeId } as any
+    await this.cardRepo.save(card)
+
+    if (data.labels !== undefined) {
+      // Delete old labels and re-insert — avoids card_id = NULL bug with cascade save
+      await this.cardRepo.query('DELETE FROM "card_label" WHERE "card_id" = $1', [cardId])
+      if (data.labels.length > 0) {
+        const values = data.labels
+            .map((_, i) => `($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`)
+            .join(', ')
+        const params = data.labels.flatMap((l) => [l.text, l.color, cardId])
+        await this.cardRepo.query(
+            `INSERT INTO "card_label" ("text", "color", "card_id") VALUES ${values}`,
+            params,
+        )
       }
     }
 
-    if (data.labels !== undefined) {
-      const { CardLabel } = require('../tasks/card-label.entity')
-      card.labels = data.labels.map((l) => {
-        const label = new CardLabel()
-        label.text = l.text
-        label.color = l.color
-        return label
-      })
+    // Update assignee_id via raw SQL — most reliable way to update a nullable FK
+    if ('assigneeId' in data) {
+      if (data.assigneeId) {
+        await this.cardRepo.query(
+            'UPDATE "card" SET "assignee_id" = $1 WHERE "id" = $2',
+            [data.assigneeId, cardId],
+        )
+      } else {
+        await this.cardRepo.query(
+            'UPDATE "card" SET "assignee_id" = NULL WHERE "id" = $1',
+            [cardId],
+        )
+      }
     }
 
-    await this.cardRepo.save(card)
     return this.findOne(card.column.project.id)
   }
 

@@ -35,10 +35,10 @@ export class Card {
   @JoinColumn({ name: 'column_id' })
   column: BoardColumn
 
-  @OneToMany(() => CardLabel, (label) => label.card, { cascade: true, eager: true })
+  @OneToMany(() => CardLabel, (label) => label.card)
   labels: CardLabel[]
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL', eager: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'assignee_id' })
   assignee: User | null
 }

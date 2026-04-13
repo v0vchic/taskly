@@ -1,14 +1,62 @@
 'use client'
 
 import type { AuthUser } from '@/shared/types'
-import { useState } from 'react'
-import { LoginForm } from '@/features/login-form'
+import { useEffect, useState } from 'react'
 import { Sidebar } from '@/features/sidebar'
 import { BoardCanvas, BoardHeader } from '@/widgets/board'
+import { LoginForm } from '../features/login-form'
 import { useAppState } from './store'
 
+const SESSION_KEY = 'taskly_session'
+
+function saveSession(user: AuthUser) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user))
+  }
+  catch {}
+}
+
+function loadSession(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw)
+      return null
+    return JSON.parse(raw) as AuthUser
+  }
+  catch {
+    return null
+  }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY)
+  }
+  catch {}
+}
+
 export const App = () => {
+  // null = not yet checked, AuthUser = logged in
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [sessionChecked, setSessionChecked] = useState(false)
+
+  // Restore session on first render
+  useEffect(() => {
+    const saved = loadSession()
+    if (saved)
+      setUser(saved)
+    setSessionChecked(true)
+  }, [])
+
+  const handleLogin = (u: AuthUser) => {
+    setUser(u)
+    saveSession(u)
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    clearSession()
+  }
 
   const {
     state,
@@ -31,8 +79,18 @@ export const App = () => {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
+  // Don't render anything until we've checked localStorage
+  // (prevents flash of login screen on refresh)
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#1e1b4b' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+      </div>
+    )
+  }
+
   if (!user) {
-    return <LoginForm onSuccess={setUser} />
+    return <LoginForm onSuccess={handleLogin} />
   }
 
   if (loading) {
@@ -52,7 +110,7 @@ export const App = () => {
         <div className="text-center">
           <p className="text-red-400 font-semibold mb-2">{error}</p>
           <button
-            onClick={() => setUser(null)}
+            onClick={handleLogout}
             className="text-white/50 text-sm hover:text-white transition-colors"
           >
             Back to login
@@ -106,7 +164,7 @@ export const App = () => {
           userEmail={user.email}
           onToggleSidebar={handleToggleSidebar}
           onRename={title => renameProject(activeProject.id, title)}
-          onLogout={() => setUser(null)}
+          onLogout={handleLogout}
         />
 
         <BoardCanvas
