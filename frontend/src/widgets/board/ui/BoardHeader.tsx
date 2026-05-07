@@ -3,6 +3,7 @@
 import type { Project, UserRole } from '@/shared/types'
 import { Check, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Pencil, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useLang } from '@/shared/i18n'
 
 interface BoardHeaderProps {
   project: Project
@@ -27,7 +28,7 @@ export const BoardHeader = ({
   const [value, setValue] = useState(project.title)
   const [isMobile, setIsMobile] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-
+  const { tr, toggleLang, lang } = useLang()
   const isManager = role === 'manager'
 
   useEffect(() => {
@@ -67,9 +68,13 @@ export const BoardHeader = ({
       <button
         onClick={onToggleSidebar}
         className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors flex-shrink-0"
-        title={sidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
+        title={sidebarCollapsed ? tr.openSidebar : tr.closeSidebar}
       >
-        {isMobile ? <Menu className="w-4 h-4" /> : sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+        {isMobile
+          ? <Menu className="w-4 h-4" />
+          : sidebarCollapsed
+            ? <PanelLeftOpen className="w-4 h-4" />
+            : <PanelLeftClose className="w-4 h-4" />}
       </button>
 
       <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: project.color }} />
@@ -84,7 +89,8 @@ export const BoardHeader = ({
                   onChange={e => setValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter')
-                      confirm(); if (e.key === 'Escape')
+                      confirm()
+                    if (e.key === 'Escape')
                       cancel()
                   }}
                   onBlur={confirm}
@@ -113,17 +119,31 @@ export const BoardHeader = ({
             )}
       </div>
 
-      {/* Right side: role badge + user email + logout */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${isManager ? 'bg-indigo-500/20 text-indigo-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
-          <div className={`w-1.5 h-1.5 rounded-full ${isManager ? 'bg-indigo-400' : 'bg-emerald-400'}`} />
-          {isManager ? 'Manager' : 'Developer'}
+        <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold 
+  ${isManager
+      ? 'bg-indigo-500/25 text-indigo-100'
+      : 'bg-emerald-500/25 text-emerald-100'
+    }`}
+        >
+          <div className={`w-1.5 h-1.5 rounded-full ${isManager ? 'bg-indigo-300' : 'bg-emerald-300'}`} />
+          {isManager ? tr.manager : tr.developer}
         </div>
-        <span className="hidden md:block text-xs text-white/40 truncate max-w-[140px]">{userEmail}</span>
+        <span className="hidden md:block text-[13px] text-white/70 truncate max-w-[140px]">{userEmail}</span>
+
+        {/* Language toggle */}
+        <button
+          onClick={toggleLang}
+          className="px-2 py-1 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors text-xs font-bold tracking-wider"
+          title="Switch language"
+        >
+          {lang === 'en' ? 'RU' : 'EN'}
+        </button>
+
         <button
           onClick={onLogout}
           className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-          title="Sign out"
+          title={tr.signOut}
         >
           <LogOut className="w-4 h-4" />
         </button>

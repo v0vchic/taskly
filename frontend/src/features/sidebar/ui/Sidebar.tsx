@@ -3,6 +3,7 @@
 import type { Project, UserRole } from '@/shared/types'
 import Image from 'next/image'
 import { AddProjectForm } from '@/features/sidebar'
+import { useLang } from '@/shared/i18n'
 import { ProjectItem } from './ProjectItem'
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ export const Sidebar = ({
   onDeleteProject,
 }: SidebarProps) => {
   const isManager = role === 'manager'
+  const { tr } = useLang()
 
   return (
     <aside
@@ -56,7 +58,7 @@ export const Sidebar = ({
 
       <div className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
         <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest px-2 pb-2 whitespace-nowrap">
-          Projects
+          {tr.projects}
         </p>
         {projects.map(project => (
           <ProjectItem
@@ -72,19 +74,17 @@ export const Sidebar = ({
         ))}
       </div>
 
-      {/* Only managers can create projects */}
       {isManager && (
         <div className="px-2 pb-4 border-t border-white/10 pt-3 flex-shrink-0">
           <AddProjectForm onAdd={onAddProject} />
         </div>
       )}
 
-      {/* Role badge for developers */}
       {!isManager && (
         <div className="px-3 pb-4 border-t border-white/10 pt-3 flex-shrink-0">
           <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5">
             <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-            <span className="text-xs text-white/40 font-medium">Developer</span>
+            <span className="text-xs text-white/40 font-medium">{tr.developer}</span>
           </div>
         </div>
       )}

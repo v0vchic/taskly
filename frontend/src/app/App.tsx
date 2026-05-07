@@ -2,9 +2,9 @@
 
 import type { AuthUser } from '@/shared/types'
 import { useEffect, useState } from 'react'
+import { LoginForm } from '@/features/login-form'
 import { Sidebar } from '@/features/sidebar'
 import { BoardCanvas, BoardHeader } from '@/widgets/board'
-import { LoginForm } from '../features/login-form'
 import { useAppState } from './store'
 
 const SESSION_KEY = 'taskly_session'

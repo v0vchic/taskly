@@ -5,6 +5,7 @@ import { AlignLeft, Calendar, Tag, Trash2, User, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CommentsSection } from '@/features/card-modal/CommentSection'
 import { LABEL_COLORS } from '@/shared/constants'
+import { useLang } from '@/shared/i18n'
 import { useComments } from './useComments'
 
 interface CardModalProps {
@@ -23,12 +24,24 @@ function getInitials(email: string): string {
 
 function getAvatarColor(email: string): string {
   const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#ef4444']
+
   let hash = 0
-  for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
+
+  for (let i = 0; i < email.length; i++)
+    hash = email.charCodeAt(i) + ((hash << 5) - hash)
+
   return colors[Math.abs(hash) % colors.length]
 }
 
-export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onDelete }: CardModalProps) => {
+export const CardModal = ({
+  card,
+  users,
+  role,
+  currentUser,
+  onClose,
+  onSave,
+  onDelete,
+}: CardModalProps) => {
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
   const [dueDate, setDueDate] = useState(card.dueDate || '')
@@ -38,7 +51,10 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
   const [newLabelColor, setNewLabelColor] = useState<string>(LABEL_COLORS[0])
   const [showLabelInput, setShowLabelInput] = useState(false)
 
-  const { comments, loading, addComment, editComment, deleteComment } = useComments(card.id, currentUser.token)
+  const { tr } = useLang()
+
+  const { comments, loading, addComment, editComment, deleteComment }
+    = useComments(card.id, currentUser.token)
 
   const isManager = role === 'manager'
 
@@ -47,14 +63,18 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
       if (e.key === 'Escape')
         onClose()
     }
+
     window.addEventListener('keydown', onKey)
+
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
   const handleSave = () => {
     if (!title.trim())
       return
+
     const assignee = users.find(u => u.id === assigneeId)
+
     onSave({
       ...card,
       title: title.trim(),
@@ -64,13 +84,23 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
       assigneeId: assigneeId || undefined,
       assigneeEmail: assignee?.email || undefined,
     })
+
     onClose()
   }
 
   const addLabel = () => {
     if (!newLabelText.trim())
       return
-    setLabels(prev => [...prev, { id: Date.now().toString(), text: newLabelText.trim(), color: newLabelColor }])
+
+    setLabels(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        text: newLabelText.trim(),
+        color: newLabelColor,
+      },
+    ])
+
     setNewLabelText('')
     setShowLabelInput(false)
   }
@@ -80,7 +110,10 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
   return (
     <div
       className="card-modal-container fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}
+      style={{
+        background: 'rgba(15,23,42,0.5)',
+        backdropFilter: 'blur(4px)',
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget)
           onClose()
@@ -89,8 +122,14 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
       <div className="card-modal-box bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100">
-          <h2 className="text-base font-bold text-slate-800">Edit Card</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+          <h2 className="text-base font-bold text-slate-800">
+            {tr.editCard}
+          </h2>
+
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -98,13 +137,16 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
         <div className="p-5 space-y-4 max-h-[75dvh] overflow-y-auto">
           {/* Title */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block">Title</label>
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block">
+              {tr.title}
+            </label>
+
             <input
               autoFocus
               value={title}
               onChange={e => setTitle(e.target.value)}
+              placeholder={tr.cardTitlePlaceholder}
               className="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow"
-              placeholder="Card title..."
             />
           </div>
 
@@ -112,15 +154,15 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <AlignLeft className="w-3.5 h-3.5" />
-              {' '}
-              Description
+              {tr.description}
             </label>
+
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
+              placeholder={tr.descriptionPlaceholder}
               className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 resize-none transition-shadow placeholder-slate-400"
-              placeholder="Add a description..."
             />
           </div>
 
@@ -128,9 +170,9 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
-              {' '}
-              Due Date
+              {tr.dueDate}
             </label>
+
             <input
               type="date"
               value={dueDate}
@@ -143,9 +185,9 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5" />
-              {' '}
-              Assignee
+              {tr.assignee}
             </label>
+
             {isManager
               ? (
                   <div className="space-y-2">
@@ -154,7 +196,10 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
                       onChange={e => setAssigneeId(e.target.value)}
                       className="w-full text-sm text-slate-700 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow bg-white"
                     >
-                      <option value="">— Unassigned —</option>
+                      <option value="">
+                        {tr.unassigned}
+                      </option>
+
                       {users.map(u => (
                         <option key={u.id} value={u.id}>
                           {u.email}
@@ -165,17 +210,26 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
                         </option>
                       ))}
                     </select>
+
                     {selectedAssignee && (
                       <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded-xl border border-indigo-100">
                         <div
                           className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                          style={{ backgroundColor: getAvatarColor(selectedAssignee.email) }}
+                          style={{
+                            backgroundColor: getAvatarColor(selectedAssignee.email),
+                          }}
                         >
                           {getInitials(selectedAssignee.email)}
                         </div>
+
                         <div>
-                          <p className="text-xs font-semibold text-slate-700">{selectedAssignee.email}</p>
-                          <p className="text-xs text-slate-400 capitalize">{selectedAssignee.role}</p>
+                          <p className="text-xs font-semibold text-slate-700">
+                            {selectedAssignee.email}
+                          </p>
+
+                          <p className="text-xs text-slate-400 capitalize">
+                            {selectedAssignee.role}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -187,18 +241,28 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
                         <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200">
                           <div
                             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                            style={{ backgroundColor: getAvatarColor(selectedAssignee.email) }}
+                            style={{
+                              backgroundColor: getAvatarColor(selectedAssignee.email),
+                            }}
                           >
                             {getInitials(selectedAssignee.email)}
                           </div>
+
                           <div>
-                            <p className="text-xs font-semibold text-slate-700">{selectedAssignee.email}</p>
-                            <p className="text-xs text-slate-400 capitalize">{selectedAssignee.role}</p>
+                            <p className="text-xs font-semibold text-slate-700">
+                              {selectedAssignee.email}
+                            </p>
+
+                            <p className="text-xs text-slate-400 capitalize">
+                              {selectedAssignee.role}
+                            </p>
                           </div>
                         </div>
                       )
                     : (
-                        <p className="text-sm text-slate-400 px-1">Not assigned</p>
+                        <p className="text-sm text-slate-400 px-1">
+                          {tr.notAssigned}
+                        </p>
                       )
                 )}
           </div>
@@ -207,19 +271,28 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <Tag className="w-3.5 h-3.5" />
-              {' '}
-              Labels
+              {tr.labels}
             </label>
+
             <div className="flex flex-wrap gap-1.5 mb-2">
               {labels.map(label => (
-                <span key={label.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: label.color }}>
+                <span
+                  key={label.id}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-white"
+                  style={{ backgroundColor: label.color }}
+                >
                   {label.text}
-                  <button onClick={() => setLabels(prev => prev.filter(l => l.id !== label.id))} className="hover:opacity-70">
+
+                  <button
+                    onClick={() => setLabels(prev => prev.filter(l => l.id !== label.id))}
+                    className="hover:opacity-70"
+                  >
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
             </div>
+
             {showLabelInput
               ? (
                   <div className="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -231,28 +304,48 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
                         if (e.key === 'Enter')
                           addLabel()
                       }}
-                      placeholder="Label text..."
+                      placeholder={tr.labelText}
                       className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
                     />
+
                     <div className="flex gap-2 flex-wrap">
                       {LABEL_COLORS.map(color => (
                         <button
                           key={color}
                           onClick={() => setNewLabelColor(color)}
                           className="w-6 h-6 rounded-full transition-transform hover:scale-110"
-                          style={{ backgroundColor: color, outline: newLabelColor === color ? `2px solid ${color}` : 'none', outlineOffset: '2px' }}
+                          style={{
+                            backgroundColor: color,
+                            outline: newLabelColor === color ? `2px solid ${color}` : 'none',
+                            outlineOffset: '2px',
+                          }}
                         />
                       ))}
                     </div>
+
                     <div className="flex gap-2">
-                      <button onClick={addLabel} className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors">Add</button>
-                      <button onClick={() => setShowLabelInput(false)} className="px-3 text-xs text-slate-500 hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
+                      <button
+                        onClick={addLabel}
+                        className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold py-1.5 rounded-lg transition-colors"
+                      >
+                        {tr.add}
+                      </button>
+
+                      <button
+                        onClick={() => setShowLabelInput(false)}
+                        className="px-3 text-xs text-slate-500 hover:bg-slate-200 rounded-lg transition-colors"
+                      >
+                        {tr.cancel}
+                      </button>
                     </div>
                   </div>
                 )
               : (
-                  <button onClick={() => setShowLabelInput(true)} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors">
-                    + Add label
+                  <button
+                    onClick={() => setShowLabelInput(true)}
+                    className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                  >
+                    {tr.addLabel}
                   </button>
                 )}
           </div>
@@ -274,14 +367,32 @@ export const CardModal = ({ card, users, role, currentUser, onClose, onSave, onD
 
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-4 bg-slate-50 border-t border-slate-100">
-          <button onClick={() => { onDelete(card.id); onClose() }} className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 font-medium transition-colors">
+          <button
+            onClick={() => {
+              onDelete(card.id)
+              onClose()
+            }}
+            className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
+          >
             <Trash2 className="w-4 h-4" />
-            {' '}
-            Delete
+            {tr.delete}
           </button>
+
           <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-xl transition-colors font-medium">Cancel</button>
-            <button onClick={handleSave} disabled={!title.trim()} className="px-4 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded-xl transition-colors font-semibold">Save</button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-xl transition-colors font-medium"
+            >
+              {tr.cancel}
+            </button>
+
+            <button
+              onClick={handleSave}
+              disabled={!title.trim()}
+              className="px-4 py-2 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded-xl transition-colors font-semibold"
+            >
+              {tr.save}
+            </button>
           </div>
         </div>
       </div>

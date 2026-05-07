@@ -3,6 +3,7 @@
 import type { UserRole } from '@/shared/types'
 import { Check, MoreHorizontal, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useLang } from '@/shared/i18n'
 
 interface ColumnHeaderProps {
   title: string
@@ -12,36 +13,57 @@ interface ColumnHeaderProps {
   onDelete: () => void
 }
 
-export const ColumnHeader = ({ title, cardCount, role, onRename, onDelete }: ColumnHeaderProps) => {
+export const ColumnHeader = ({
+  title,
+  cardCount,
+  role,
+  onRename,
+  onDelete,
+}: ColumnHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(title)
   const [showMenu, setShowMenu] = useState(false)
+
   const menuRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const { tr } = useLang()
+
   const isManager = role === 'manager'
 
-  useEffect(() => { setValue(title) }, [title])
+  useEffect(() => {
+    setValue(title)
+  }, [title])
+
   useEffect(() => {
     if (isEditing)
       inputRef.current?.focus()
   }, [isEditing])
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node))
         setShowMenu(false)
     }
+
     document.addEventListener('mousedown', handler)
+
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
   const confirm = () => {
     if (value.trim())
       onRename(value.trim())
-    else setValue(title)
+    else
+      setValue(title)
+
     setIsEditing(false)
   }
-  const cancel = () => { setValue(title); setIsEditing(false) }
+
+  const cancel = () => {
+    setValue(title)
+    setIsEditing(false)
+  }
 
   return (
     <div className="flex items-center gap-2 px-3.5 pt-3.5 pb-2.5">
@@ -55,14 +77,34 @@ export const ColumnHeader = ({ title, cardCount, role, onRename, onDelete }: Col
                   onChange={e => setValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter')
-                      confirm(); if (e.key === 'Escape')
+                      confirm()
+
+                    if (e.key === 'Escape')
                       cancel()
                   }}
                   onBlur={confirm}
                   className="flex-1 min-w-0 text-sm font-bold text-slate-700 bg-white border border-indigo-300 rounded-lg px-2 h-full outline-none focus:ring-2 focus:ring-indigo-300"
                 />
-                <button onMouseDown={(e) => { e.preventDefault(); confirm() }} className="text-green-500 hover:text-green-600 flex-shrink-0"><Check className="w-4 h-4" /></button>
-                <button onMouseDown={(e) => { e.preventDefault(); cancel() }} className="text-slate-400 hover:text-slate-600 flex-shrink-0"><X className="w-4 h-4" /></button>
+
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    confirm()
+                  }}
+                  className="text-green-500 hover:text-green-600 flex-shrink-0"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    cancel()
+                  }}
+                  className="text-slate-400 hover:text-slate-600 flex-shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             )
           : (
@@ -73,6 +115,7 @@ export const ColumnHeader = ({ title, cardCount, role, onRename, onDelete }: Col
                 <h3 className="text-sm font-bold text-slate-700 truncate group-hover/title:text-indigo-600 transition-colors">
                   {title}
                 </h3>
+
                 <span className="text-xs font-semibold text-slate-400 bg-slate-200 rounded-full px-2 py-0.5 flex-shrink-0">
                   {cardCount}
                 </span>
@@ -80,7 +123,6 @@ export const ColumnHeader = ({ title, cardCount, role, onRename, onDelete }: Col
             )}
       </div>
 
-      {/* Menu button — manager only */}
       {isManager && (
         <div className="relative flex-shrink-0" ref={menuRef}>
           <button
@@ -89,20 +131,28 @@ export const ColumnHeader = ({ title, cardCount, role, onRename, onDelete }: Col
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
+
           {showMenu && (
             <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 min-w-40">
               <button
-                onClick={() => { setIsEditing(true); setShowMenu(false) }}
+                onClick={() => {
+                  setIsEditing(true)
+                  setShowMenu(false)
+                }}
                 className="w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                Rename
+                {tr.rename}
               </button>
+
               <button
-                onClick={() => { onDelete(); setShowMenu(false) }}
+                onClick={() => {
+                  onDelete()
+                  setShowMenu(false)
+                }}
                 className="w-full text-left px-3.5 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Delete column
+                {tr.deleteColumn}
               </button>
             </div>
           )}
