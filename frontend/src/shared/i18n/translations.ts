@@ -146,7 +146,7 @@ export const t: Record<Lang, Translations> = {
     addCard: 'Добавить карточку',
     cardTitle: 'Название карточки...',
     addCardBtn: 'Добавить',
-    addList: 'Добавить список',
+    addList: 'Добавить колонку',
     columnName: 'Название колонки...',
     addColumn: 'Добавить колонку',
 

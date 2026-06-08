@@ -97,7 +97,7 @@ export class ProjectsService {
   async create(title: string, color: string, ownerId: string): Promise<ProjectDto> {
     const project = this.projectRepo.create({ title, color, owner: { id: ownerId } })
     await this.projectRepo.save(project)
-    const defaultCols = ['To Do', 'In Progress', 'Done']
+    const defaultCols = ['К выполнению', 'В работе', 'Готово']
     for (let i = 0; i < defaultCols.length; i++) {
       await this.columnRepo.save(
           this.columnRepo.create({ title: defaultCols[i], position: i, project }),

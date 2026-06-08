@@ -31,10 +31,12 @@ export const ProjectItem = ({
 
   const isManager = role === 'manager'
 
+  // Сбрасываем значение инпута только при смене проекта или его названия извне,
+  // но НЕ реагируем на изменение value — иначе каждый введённый символ сбрасывался бы обратно
   useEffect(() => {
-    if (project.title !== value)
-      setValue(project.title)
-  }, [project.title, value])
+    setValue(project.title)
+  }, [project.id, project.title])
+
   useEffect(() => {
     if (isEditing)
       inputRef.current?.focus()
@@ -44,10 +46,15 @@ export const ProjectItem = ({
     const trimmed = value.trim()
     if (trimmed)
       onRename(trimmed)
-    else setValue(project.title)
+    else
+      setValue(project.title)
     setIsEditing(false)
   }
-  const cancel = () => { setValue(project.title); setIsEditing(false) }
+
+  const cancel = () => {
+    setValue(project.title)
+    setIsEditing(false)
+  }
 
   return (
     <div
@@ -64,16 +71,23 @@ export const ProjectItem = ({
                 onChange={e => setValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter')
-                    confirm(); if (e.key === 'Escape')
+                    confirm()
+                  if (e.key === 'Escape')
                     cancel()
                 }}
                 onBlur={confirm}
                 className="flex-1 min-w-0 text-xs text-white bg-white/10 border border-white/25 rounded-lg px-2 py-1.5 outline-none focus:border-white/50"
               />
-              <button onMouseDown={(e) => { e.preventDefault(); confirm() }} className="text-green-400 hover:text-green-300 flex-shrink-0">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); confirm() }}
+                className="text-green-400 hover:text-green-300 flex-shrink-0"
+              >
                 <Check className="w-3.5 h-3.5" />
               </button>
-              <button onMouseDown={(e) => { e.preventDefault(); cancel() }} className="text-white/40 hover:text-white/70 flex-shrink-0">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); cancel() }}
+                className="text-white/40 hover:text-white/70 flex-shrink-0"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -119,7 +133,11 @@ export const ProjectItem = ({
                   onDelete()
                 else setConfirmDelete(true)
               }}
-              className={`p-1 rounded-md transition-colors ${confirmDelete ? 'bg-red-500/20 text-red-400 hover:bg-red-500/40' : 'hover:bg-white/10 text-white/30 hover:text-red-400'}`}
+              className={`p-1 rounded-md transition-colors ${
+                confirmDelete
+                  ? 'bg-red-500/20 text-red-400 hover:bg-red-500/40'
+                  : 'hover:bg-white/10 text-white/30 hover:text-red-400'
+              }`}
               title={confirmDelete ? 'Click again to confirm' : 'Delete project'}
             >
               <Trash2 className="w-3 h-3" />

@@ -27,8 +27,8 @@ export const AddColumnButton = ({ onAdd }: AddColumnButtonProps) => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="flex-shrink-0 w-72 flex items-center gap-2.5 text-sm text-white/70 hover:text-white rounded-2xl px-4 py-3.5 transition-all hover:bg-white/10"
-        style={{ background: 'rgba(255,255,255,0.08)' }}
+        className="flex-shrink-0 w-72 flex items-center gap-2.5 text-sm text-white font-semibold rounded-2xl px-4 py-3.5 transition-all hover:bg-white/20 border border-white/30 hover:border-white/50"
+        style={{ background: 'rgba(255,255,255,0.22)' }}
       >
         <Plus className="w-4 h-4" />
         {tr.addList}

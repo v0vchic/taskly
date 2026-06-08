@@ -113,28 +113,6 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
             {loading ? tr.signingIn : tr.signIn}
           </button>
         </form>
-
-        <div className="mt-6 p-4 bg-slate-50 rounded-xl text-xs text-slate-500 space-y-1">
-          <p className="font-semibold text-slate-600 mb-2">
-            {tr.demoAccounts}
-          </p>
-
-          <p>
-            <span className="font-medium">
-              Manager:
-            </span>
-            {' '}
-            manager@taskly.com / manager123
-          </p>
-
-          <p>
-            <span className="font-medium">
-              Developer:
-            </span>
-            {' '}
-            dev1@taskly.com / dev123
-          </p>
-        </div>
       </div>
     </div>
   )

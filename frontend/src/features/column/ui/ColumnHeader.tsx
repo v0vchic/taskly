@@ -1,7 +1,7 @@
 'use client'
 
 import type { UserRole } from '@/shared/types'
-import { Check, MoreHorizontal, Trash2, X } from 'lucide-react'
+import { Check, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLang } from '@/shared/i18n'
 
@@ -139,8 +139,9 @@ export const ColumnHeader = ({
                   setIsEditing(true)
                   setShowMenu(false)
                 }}
-                className="w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                className="w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2"
               >
+                <Pencil className="w-3.5 h-3.5" />
                 {tr.rename}
               </button>
 
